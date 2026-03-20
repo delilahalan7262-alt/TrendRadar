@@ -1,8 +1,16 @@
-import { ok, fail } from '@/lib/api';
-import { updateTask } from '@/lib/tasks-store';
+import { fromServiceError, logApi, ok } from '@/lib/api';
+import { getTasksService } from '@/services/tasks-service';
+
+const route = '/api/tasks/:id/unstar';
+const tasksService = getTasksService();
 
 export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const task = await updateTask(id, { is_starred: false });
-  return task ? ok(task) : fail('任务不存在', 404);
+  try {
+    const { id } = await params;
+    const task = await tasksService.unstarTask(id);
+    logApi(route, 'unstar_task', { taskId: id });
+    return ok(task);
+  } catch (error) {
+    return fromServiceError(error, route);
+  }
 }

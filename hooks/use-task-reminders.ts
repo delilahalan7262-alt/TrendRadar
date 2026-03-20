@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Task } from '@/lib/types';
+import { ApiResponse } from '@/lib/types';
+import { Task } from '@/types/task';
 
 async function readJson<T>(input: RequestInfo, init?: RequestInit) {
   const response = await fetch(input, init);
-  const json = (await response.json()) as { success: boolean; data?: T; error?: string };
+  const json = (await response.json()) as ApiResponse<T>;
   if (!response.ok || !json.success || !json.data) {
-    throw new Error(json.error ?? '请求失败');
+    throw new Error(json.error?.message ?? '请求失败');
   }
   return json.data;
 }
@@ -51,7 +52,7 @@ export function useTaskReminders(onTaskChange: (task: Task) => void) {
               readJson<Task>(`/api/tasks/${task.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reminder_sent: true }),
+                body: JSON.stringify({ reminderSent: true }),
               })
                 .then(onTaskChange)
                 .catch(() => undefined);
@@ -64,8 +65,11 @@ export function useTaskReminders(onTaskChange: (task: Task) => void) {
       }
     };
 
-    poll();
-    const timer = window.setInterval(poll, 30_000);
+    void poll();
+    const timer = window.setInterval(() => {
+      void poll();
+    }, 30_000);
+
     return () => {
       stopped = true;
       window.clearInterval(timer);
@@ -74,10 +78,6 @@ export function useTaskReminders(onTaskChange: (task: Task) => void) {
 
   const actions = useMemo(
     () => ({
-      dismiss(taskId: string) {
-        setQueue((current) => current.filter((task) => task.id !== taskId));
-        seen.current.delete(taskId);
-      },
       async complete(taskId: string) {
         const task = await readJson<Task>(`/api/tasks/${taskId}/complete`, { method: 'POST' });
         onTaskChange(task);

@@ -1,25 +1,23 @@
-import { ok, fail } from '@/lib/api';
-import { getTask, updateTask } from '@/lib/tasks-store';
-import { snoozeInputSchema } from '@/lib/task-schema';
+import { fromServiceError, logApi, ok, fail } from '@/lib/api';
+import { getTasksService } from '@/services/tasks-service';
+import { snoozeInputSchema } from '@/validators/task';
+
+const route = '/api/tasks/:id/snooze';
+const tasksService = getTasksService();
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const task = await getTask(id);
-    if (!task) return fail('任务不存在', 404);
-
     const body = await request.json();
-    const { minutes } = snoozeInputSchema.parse(body);
-    const snoozeUntil = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+    const input = snoozeInputSchema.safeParse(body);
+    if (!input.success) {
+      return fail('请求体不合法', 400, 'INVALID_SNOOZE_INPUT', input.error.flatten());
+    }
 
-    const updated = await updateTask(id, {
-      snooze_until: snoozeUntil,
-      reminder_sent: false,
-      reminder_enabled: true,
-    });
-
-    return ok(updated);
+    const task = await tasksService.snoozeTask(id, input.data.minutes);
+    logApi(route, 'snooze_task', { taskId: id, minutes: input.data.minutes });
+    return ok(task);
   } catch (error) {
-    return fail(error instanceof Error ? error.message : '稍后提醒失败', 400);
+    return fromServiceError(error, route);
   }
 }

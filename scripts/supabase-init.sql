@@ -6,27 +6,27 @@ create table if not exists public.tasks (
   description text not null default '',
   status text not null default 'pending' check (status in ('pending', 'completed')),
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
-  is_starred boolean not null default false,
-  due_at timestamptz,
-  remind_at timestamptz,
-  reminder_enabled boolean not null default false,
-  reminder_sent boolean not null default false,
-  snooze_until timestamptz,
   tags text[] not null default '{}',
-  created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  "isStarred" boolean not null default false,
+  "dueAt" timestamptz,
+  "remindAt" timestamptz,
+  "reminderEnabled" boolean not null default false,
+  "reminderSent" boolean not null default false,
+  "snoozeUntil" timestamptz,
+  "createdAt" timestamptz not null default timezone('utc', now()),
+  "updatedAt" timestamptz not null default timezone('utc', now())
 );
 
 create index if not exists tasks_status_idx on public.tasks (status);
 create index if not exists tasks_priority_idx on public.tasks (priority);
-create index if not exists tasks_due_at_idx on public.tasks (due_at);
-create index if not exists tasks_remind_at_idx on public.tasks (remind_at);
+create index if not exists tasks_due_at_idx on public.tasks ("dueAt");
+create index if not exists tasks_remind_at_idx on public.tasks ("remindAt");
 create index if not exists tasks_tags_gin_idx on public.tasks using gin (tags);
 
 create or replace function public.set_tasks_updated_at()
 returns trigger as $$
 begin
-  new.updated_at = timezone('utc', now());
+  new."updatedAt" = timezone('utc', now());
   return new;
 end;
 $$ language plpgsql;

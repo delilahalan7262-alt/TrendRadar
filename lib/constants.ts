@@ -1,4 +1,4 @@
-import { TaskFilters, TaskView } from '@/lib/types';
+import { TaskFilters, TaskView } from '@/types/task';
 
 export const defaultFilters: TaskFilters = {
   query: '',

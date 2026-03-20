@@ -1,22 +1,15 @@
-import { ok, fail } from '@/lib/api';
-import { listTasks } from '@/lib/tasks-store';
-import { reminderBaseTime } from '@/lib/utils';
+import { fromServiceError, logApi, ok } from '@/lib/api';
+import { getTasksService } from '@/services/tasks-service';
+
+const route = '/api/tasks/reminders/due';
+const tasksService = getTasksService();
 
 export async function GET() {
   try {
-    const now = Date.now();
-    const due = (await listTasks()).filter((task) => {
-      const base = reminderBaseTime(task);
-      return Boolean(
-        task.reminder_enabled &&
-          task.status !== 'completed' &&
-          !task.reminder_sent &&
-          base &&
-          new Date(base).getTime() <= now,
-      );
-    });
-    return ok(due);
+    const dueTasks = await tasksService.listDueReminders();
+    logApi(route, 'list_due_reminders', { total: dueTasks.length });
+    return ok(dueTasks);
   } catch (error) {
-    return fail(error instanceof Error ? error.message : '获取提醒失败', 500);
+    return fromServiceError(error, route);
   }
 }

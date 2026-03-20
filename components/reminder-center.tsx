@@ -1,6 +1,6 @@
 'use client';
 
-import { Task } from '@/lib/types';
+import { Task } from '@/types/task';
 import { formatDateTime } from '@/lib/utils';
 
 export function ReminderCenter({
@@ -21,8 +21,8 @@ export function ReminderCenter({
           <p className="text-sm font-semibold text-brand-600">你有一个待处理任务</p>
           <h3 className="mt-1 text-lg font-semibold text-slate-900">{task.title}</h3>
           <div className="mt-3 space-y-1 text-sm text-slate-500">
-            <p>提醒时间：{formatDateTime(task.snooze_until ?? task.remind_at)}</p>
-            <p>截止时间：{formatDateTime(task.due_at)}</p>
+            <p>提醒时间：{formatDateTime(task.snoozeUntil ?? task.remindAt)}</p>
+            <p>截止时间：{formatDateTime(task.dueAt)}</p>
             <p>优先级：{task.priority}</p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">

@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Task, TaskFilters, TaskView } from '@/lib/types';
+import { Task, TaskFilters, TaskView } from '@/types/task';
 
 export function cn(...classes: Array<string | false | null | undefined>) {
   return clsx(classes);
@@ -30,7 +30,7 @@ export function isToday(dateString: string | null) {
 }
 
 export function isOverdue(task: Task) {
-  return task.status !== 'completed' && !!task.due_at && new Date(task.due_at).getTime() < Date.now();
+  return task.status !== 'completed' && !!task.dueAt && new Date(task.dueAt).getTime() < Date.now();
 }
 
 export function matchesView(task: Task, view: TaskView) {
@@ -38,9 +38,9 @@ export function matchesView(task: Task, view: TaskView) {
     case 'inbox':
       return task.status === 'pending';
     case 'today':
-      return task.status === 'pending' && (isToday(task.due_at) || isToday(task.remind_at));
+      return task.status === 'pending' && (isToday(task.dueAt) || isToday(task.remindAt));
     case 'starred':
-      return task.is_starred;
+      return task.isStarred;
     case 'completed':
       return task.status === 'completed';
     case 'all':
@@ -61,15 +61,13 @@ export function matchesFilters(task: Task, filters: TaskFilters) {
   const inPriority = filters.priority === 'all' || task.priority === filters.priority;
   const inStarred =
     filters.starred === 'all' ||
-    (filters.starred === 'starred' ? task.is_starred : !task.is_starred);
-  const inDue =
-    filters.due === 'all' ||
-    (filters.due === 'today' ? isToday(task.due_at) : isOverdue(task));
+    (filters.starred === 'starred' ? task.isStarred : !task.isStarred);
+  const inDue = filters.due === 'all' || (filters.due === 'today' ? isToday(task.dueAt) : isOverdue(task));
   const inTag = filters.tag === 'all' || task.tags.includes(filters.tag);
 
   return inQuery && inStatus && inPriority && inStarred && inDue && inTag;
 }
 
 export function reminderBaseTime(task: Task) {
-  return task.snooze_until ?? task.remind_at;
+  return task.snoozeUntil ?? task.remindAt;
 }

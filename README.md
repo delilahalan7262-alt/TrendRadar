@@ -1,8 +1,8 @@
-# Task Radar MVP
+# Task Radar v2 Prep
 
-一个基于 **Next.js + React + Tailwind CSS + TypeScript** 的轻量级任务清单 Web 应用。当前版本优先保证 **本地可运行**，核心能力已经覆盖：任务列表、任务弹窗、新增/编辑/删除/完成/星标、基础筛选、页面提醒、浏览器通知提醒，以及本地 JSON 持久化。
+Task Radar 当前已经是一个 **可本地运行** 的轻量任务系统，并且完成了 v2 方向的架构整理：数据访问层、服务层、统一任务模型、稳定 REST API，以及为后续 ChatGPT / MCP 接入准备的规划文档。
 
-## 当前已完成功能
+## 当前能力
 
 - 任务列表主页面
 - 新建 / 编辑任务弹窗
@@ -10,97 +10,99 @@
 - 本地 JSON 持久化（`.data/tasks.json`）
 - 提醒时间字段
 - 页面内提醒弹窗
-- Notification API 浏览器通知
+- 浏览器 Notification API 提醒
 - 基础筛选：全部、待处理、已完成、星标、今日任务
-- 搜索标题 / 描述 / 标签
-- REST API（后续可接 Supabase / ChatGPT 工具调用）
+- 统一 REST API 响应格式
+- MCP tools 规划文档
+- HTTPS / 部署准备文档
 
-## 技术栈
+## 项目结构（v2 整理后）
 
-- Next.js 15
-- React 19
-- Tailwind CSS
-- TypeScript
-- 本地 JSON 持久化（MVP 默认）
-- Supabase PostgreSQL 初始化 SQL（已预留，便于后续切换）
+```text
+app/api/tasks/*          REST API
+components/*             前端页面组件
+hooks/*                  前端提醒 hook
+repositories/*           数据访问层（当前为本地 JSON）
+services/*               业务服务层
+validators/*             输入校验
+types/*                  统一任务模型
+mcp/*                    未来 MCP 映射预留
+docs/*                   MCP / 部署规划文档
+```
 
-## 本地启动
+## 本地运行
 
-### 1）安装依赖
+### 1. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 2）启动开发环境
+### 2. 启动开发环境
 
 ```bash
 npm run dev
 ```
 
-### 3）打开浏览器
+### 3. 打开浏览器
 
 访问：<http://localhost:3000>
 
-## 本地如何测试功能
+## 本地测试提醒
 
-### 测试任务列表 / 新建任务
+### 方法 A：开发辅助按钮
 
-1. 打开首页。
-2. 点击右上角 **“新建任务”**。
-3. 输入标题，保存后应立即出现在任务列表中。
-4. 点击卡片右侧按钮可继续测试：
-   - ⭐ 星标 / 取消星标
-   - ✅ 完成 / 取消完成
-   - ✏️ 编辑
-   - 🗑️ 删除
+1. 打开首页
+2. 点击 **“创建 1 分钟测试提醒”**
+3. 等待约 1 分钟到 1 分 30 秒
+4. 查看页面右上角提醒卡片
 
-### 测试提醒弹窗
+> 说明：该按钮是保留的 **dev helper**，只用于本地验证提醒链路。
 
-有两种最快方式：
+### 方法 B：手动创建提醒任务
 
-#### 方式 A：一键创建测试提醒
-
-1. 首页右侧点击 **“创建 1 分钟测试提醒”**。
-2. 等待约 1 分钟。
-3. 前端轮询每 30 秒检查一次，所以通常会在 **1 分钟到 1 分 30 秒左右** 出现提醒。
-4. 页面右上角会弹出提醒卡片。
-
-#### 方式 B：手动创建提醒任务
-
-1. 点击 **“新建任务”**。
-2. 开启 **“开启提醒”**。
-3. 将提醒时间设置为当前时间后 1~2 分钟。
-4. 保存后等待提醒触发。
+1. 点击 **“新建任务”**
+2. 开启提醒
+3. 将提醒时间设置为当前时间后 1~2 分钟
+4. 保存并等待提醒触发
 
 ### 测试浏览器通知
 
-1. 点击首页右上区域的 **“开启浏览器通知”**。
-2. 在浏览器弹窗中选择 **允许**。
-3. 创建一个 1 分钟后的提醒任务。
-4. 当提醒触发时：
-   - 页面内会出现提醒卡片；
-   - 浏览器系统通知也会弹出（取决于浏览器和操作系统是否允许通知）。
+1. 点击页面中的 **“开启浏览器通知”**
+2. 在浏览器中允许通知权限
+3. 创建一个 1 分钟后的提醒任务
+4. 到点后检查页面提醒和系统通知
 
-### 测试“稍后提醒”
+## API 概览
 
-当提醒卡片弹出后：
+统一成功响应：
 
-- 点击 **“稍后10分钟”**：任务会写入新的 `snooze_until`
-- 点击 **“稍后30分钟”**：任务会延后 30 分钟再次提醒
-- 点击 **“完成任务”**：任务会变成已完成，不再提醒
-- 点击 **“查看任务”**：页面会滚动定位到该任务并高亮
+```json
+{
+  "success": true,
+  "data": {},
+  "error": null
+}
+```
 
-## 数据存储说明
+统一失败响应：
 
-- 当前 MVP 默认使用 `.data/tasks.json` 存储任务。
-- 首次启动后，系统会自动生成示例任务数据。
-- 不需要先配置 Supabase，就可以完整跑通本地 MVP。
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "TASK_NOT_FOUND",
+    "message": "任务不存在",
+    "details": null
+  }
+}
+```
 
-## REST API
+### 核心接口
 
-- `POST /api/tasks`
 - `GET /api/tasks`
+- `POST /api/tasks`
 - `GET /api/tasks/:id`
 - `PATCH /api/tasks/:id`
 - `DELETE /api/tasks/:id`
@@ -111,16 +113,38 @@ npm run dev
 - `POST /api/tasks/:id/snooze`
 - `GET /api/tasks/reminders/due`
 
-## 后续切换到 Supabase
+## 后续 MCP 接入路径
 
-如果后续需要改为 Supabase PostgreSQL：
+当前版本 **没有实现真实 MCP server**，但已经完成接入前准备：
 
-1. 在 Supabase SQL Editor 中执行 `scripts/supabase-init.sql`
-2. 将 `lib/tasks-store.ts` 替换为 Supabase 数据访问实现
-3. 再补充环境变量：
+- 工具集规划：`docs/mcp-tools-plan.md`
+- MCP 目录预留：`mcp/README.md`
+- Tool 与 REST API / service 映射：`mcp/tool-mapping.ts`
+- HTTPS / connector 部署准备：`docs/deployment-plan.md`
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
+推荐后续路线：
+
+1. 继续保持 UI、API、Service、Repository 分层
+2. 未来实现 `/mcp` endpoint
+3. MCP tool 只调用 `services/tasks-service.ts`
+4. 等 HTTPS 与公网部署准备好后，再接入 ChatGPT connector
+
+## 数据层说明
+
+当前使用本地 JSON 仓储：
+
+- `repositories/tasks-repository.ts`
+
+未来如果切换到 Supabase / PostgreSQL，建议：
+
+1. 新增一个 Supabase Repository 实现
+2. 保持 `services/tasks-service.ts` 不变
+3. 让 API 与未来 MCP 层继续复用同一 service
+
+## 相关文档
+
+- `docs/mcp-tools-plan.md`
+- `docs/deployment-plan.md`
+- `mcp/README.md`
+- `mcp/tool-mapping.ts`
+- `scripts/supabase-init.sql`
